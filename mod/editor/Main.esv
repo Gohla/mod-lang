@@ -1,0 +1,21 @@
+module Main
+
+imports
+
+  Syntax
+  Analysis
+
+language
+
+  extensions : mod
+
+  provider : target/metaborg/stratego.ctree
+  provider : target/metaborg/stratego-javastrat.jar
+
+menus
+
+  menu: "Generation"
+    
+    action: "Chain of 10"   = gen-import-chain-10-action (source)
+    action: "Chain of 100"  = gen-import-chain-100-action (source)
+    action: "Chain of 1000" = gen-import-chain-1000-action (source)

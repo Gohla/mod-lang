@@ -1,0 +1,32 @@
+module gen/chain
+
+imports
+
+rules // Generate long import chain
+
+  gen-import-chain:
+    size -> <range(|1); map(gen-import-chain-part)> size
+
+  gen-import-chain-part:
+    0 -> (filename, string)
+    with
+      filename := $[m0.mod]
+    ; string   := 
+      $[module m0
+        
+        def d0 = 0
+      ]
+      
+  gen-import-chain-part:
+    i -> (filename, string)
+    where <gt> (i, 0)
+    with
+      filename := $[m[i].mod]
+    ; prev_i   := <dec> i
+    ; string   := 
+      $[module m[i]
+        
+        import m[prev_i].*
+        
+        def d[i] = d[prev_i]
+      ]

@@ -1,0 +1,8 @@
+---
+id: org.example:mod.example:0.1.0-SNAPSHOT
+name: mod
+dependencies:
+  compile:
+  - org.example:mod:0.1.0-SNAPSHOT
+build:
+  useBuildSystemSpec: true

@@ -1,0 +1,80 @@
+module static-semantics
+
+imports
+
+  signatures/-
+
+signature
+
+  namespaces Mod Def
+  
+  name resolution
+  
+    labels          P I
+    order           D < I, D < P, I < P
+    well-formedness P*.I*
+  
+  types IntTy() BoolTy()
+
+rules // init
+
+  init ^ (s_root) :=
+    // Root scope
+    new s_root.
+    // Disallow duplicate modules (does not work because it is solved per-file)
+    //distinct/name D(s_root)/Mod | error "Duplicate modules" @NAMES.
+    
+rules // program
+
+  [[ Program(mn, is, ds) ^ (s_root) ]] :=
+    // Module definition
+    Mod{mn} <- s_root,
+    // Module scope for definitions
+    new s_mod,
+    s_mod -P-> s_root,
+    // Associated scope for imports
+    Mod{mn} =I=> s_mod,
+    // Disallow duplicate definitions
+    distinct/name D(s_mod)/Def | error "Duplicate definitions" @NAMES,
+    // Traverse imports and definitions
+    Map1 [[ is ^ (s_root) ]],
+    Map1 [[ ds ^ (s_mod) ]].
+
+rules // imports
+    
+  [[ Import(mn) ^ (s_root) ]] :=
+    Mod{mn} -> s_root,
+    Mod{mn} |-> p,
+    Mod{mn} <=I= s_root.
+
+rules // definitions
+
+  [[ Def(dn, e) ^ (s_mod) ]] :=
+    Def{dn} <- s_mod,
+    Def{dn} : ty !,
+    [[ e ^ (s_mod) : ty]].
+
+  [[ Ref(dn) ^ (s_mod) : ty ]] :=
+    Def{dn} -> s_mod,
+    Def{dn} |-> d,
+    d : ty. 
+
+rules // literals
+
+  [[ Int(_)  ^ (_) : IntTy()  ]] := true.
+  [[ True()  ^ (_) : BoolTy() ]] := true.
+  [[ False() ^ (_) : BoolTy() ]] := true.
+
+rules // operators
+
+  [[ Add(l, r) ^ (s_mod) : IntTy() ]] :=
+    [[ l ^ (s_mod) : ty1]],
+    [[ r ^ (s_mod) : ty2]],
+    ty1 == IntTy() | error $[Expected integer],
+    ty2 == IntTy() | error $[Expected integer].
+
+  [[ Or(l, r) ^ (s_mod) : BoolTy() ]] :=
+    [[ l ^ (s_mod) : ty1]],
+    [[ r ^ (s_mod) : ty2]],
+    ty1 == BoolTy() | error $[Expected boolean],
+    ty2 == BoolTy() | error $[Expected boolean].

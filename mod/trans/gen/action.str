@@ -1,0 +1,27 @@
+module gen/action
+
+imports
+
+  gen/chain
+
+rules
+
+  gen-import-chain-action(|size):
+    (_, _, _, path, project-path) -> None()
+    with
+      files := <gen-import-chain> size
+    ; <map(write-string-to-file(|project-path))> files
+
+  gen-import-chain-10-action   = gen-import-chain-action(|10)
+  gen-import-chain-100-action  = gen-import-chain-action(|100)
+  gen-import-chain-1000-action = gen-import-chain-action(|1000)
+
+rules
+       
+  write-string-to-file(|project-path):
+    (filename, string) -> None()
+    with
+      fullname := $[[project-path]/[filename]]
+    ; handle := <fopen> (fullname, "w")
+    ; <fputs> (string, handle)
+    ; <fclose> handle

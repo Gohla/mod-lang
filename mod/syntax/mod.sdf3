@@ -1,0 +1,35 @@
+module mod
+
+imports lex
+
+context-free syntax
+  
+Start.Program = <module <ID>
+
+<{Import "\n"}*>
+
+<{Def "\n"}*>
+>
+
+Import.Import = <import <ID>.*>
+
+Def.Def = <def <ID> = <Exp>>
+
+Exp.True  = <true>
+Exp.False = <false>
+Exp.Int   = <<INT>>
+Exp.Add   = <<Exp> + <Exp>> {left}
+Exp.Or    = <<Exp> | <Exp>> {left}
+Exp.Ref   = <<ID>> {avoid}
+
+context-free priorities
+
+{ left : Exp.Add Exp.Or }
+
+context-free start-symbols
+
+Start
+
+template options
+
+keyword  -/- [a-zA-Z]
