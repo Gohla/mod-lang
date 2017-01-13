@@ -20,9 +20,9 @@ rules // init
 
   init ^ (s_root) :=
     // Root scope
-    new s_root.
+    new s_root,
     // Disallow duplicate modules (does not work because it is solved per-file)
-    //distinct/name D(s_root)/Mod | error "Duplicate modules" @NAMES.
+    distinct/name D(s_root)/Mod | error "Duplicate modules" @NAMES.
     
 rules // program
 
@@ -37,15 +37,15 @@ rules // program
     // Disallow duplicate definitions
     distinct/name D(s_mod)/Def | error "Duplicate definitions" @NAMES,
     // Traverse imports and definitions
-    Map1 [[ is ^ (s_root) ]],
+    Map1 [[ is ^ (s_mod) ]],
     Map1 [[ ds ^ (s_mod) ]].
 
 rules // imports
     
-  [[ Import(mn) ^ (s_root) ]] :=
-    Mod{mn} -> s_root,
+  [[ Import(mn) ^ (s_mod) ]] :=
+    Mod{mn} -> s_mod,
     Mod{mn} |-> p,
-    Mod{mn} <=I= s_root.
+    Mod{mn} <=I= s_mod.
 
 rules // definitions
 
