@@ -1,0 +1,25 @@
+module test
+
+language mod
+
+test empty [[]] parse succeeds
+
+test empty public module  [[ pub mod m {} ]] parse succeeds
+test empty private module [[ prv mod m {} ]] parse succeeds
+test nested empty modules [[ pub mod m { pub mod n { pub mod o {} } }]] parse succeeds
+
+test public import            [[ pub imp m.* ]] parse succeeds
+test private import           [[ pub imp m.* ]] parse succeeds
+test wildcard import          [[ pub imp m.* ]] parse succeeds
+test nested wildcard import   [[ pub imp m.n.o.* ]] parse succeeds
+test definition import        [[ pub imp m.d ]] parse succeeds
+test nested definition import [[ pub imp m.n.o.d ]] parse succeeds
+
+test public definition  [[ pub def d = 1 ]] parse succeeds
+test private definition [[ prv def d = 1 ]] parse succeeds
+
+test integer value definition         [[ pub def d = 1 ]] parse succeeds
+test boolean (true) value definition  [[ pub def d = true ]] parse succeeds
+test boolean (false) value definition [[ pub def d = false ]] parse succeeds
+test reference value definition       [[ pub def d = d ]] parse succeeds
+
