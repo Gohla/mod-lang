@@ -83,19 +83,6 @@ rules // import
     Mod{id_m} -> s_out,
     Mod{id_m} <=I= s_out,
     Mod{id_m} |-> m.
-    
-
-    
-//  ImpId [[ Id(id_m) ^ (s) : s_m_pub ]] :=
-//    Mod{id_m} -> s,
-//    Mod{id_m} |-> m,
-//    m ?=I=> s_m_pub.
-//    
-//  ImpId [[ QId(id_nest, id_m) ^ (s) : s_m_pub ]] :=
-//    ImpId [[ id_nest ^ (s) : s_nest_pub ]],
-//    Mod{id_m} -> s_nest_pub,
-//    Mod{id_m} |-> m,
-//    m ?=I=> s_m_pub.
 
 rules // definition
 
