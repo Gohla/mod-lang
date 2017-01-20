@@ -13,68 +13,133 @@ signature
     labels          P I
     order           D < I, D < P, I < P
     well-formedness P*.I*
+
+  types
   
-  types IntTy() BoolTy()
+    ScopeType(scope)
 
 rules // init
 
   init ^ (s_root) :=
-    // Root scope
     new s_root,
-    // Disallow duplicate modules (does not work because it is solved per-file)
-    distinct/name D(s_root)/Mod | error "Duplicate modules" @NAMES.
-    
+    distinct/name D(s_prog)/Def | error "Duplicate definitions" @NAMES,
+    distinct/name D(s_prog)/Mod | error "Duplicate modules" @NAMES.
+        
 rules // program
 
-  [[ Program(mn, is, ds) ^ (s_root) ]] :=
-    // Module definition
-    Mod{mn} <- s_root,
-    // Module scope for definitions
-    new s_mod,
-    s_mod -P-> s_root,
-    // Associated scope for imports
-    Mod{mn} =I=> s_mod,
-    // Disallow duplicate definitions
-    distinct/name D(s_mod)/Def | error "Duplicate definitions" @NAMES,
-    // Traverse imports and definitions
-    Map1 [[ is ^ (s_mod) ]],
-    Map1 [[ ds ^ (s_mod) ]].
+  [[ Program(es) ^ (s_pub) ]] :=
+    new s_prv,
+    s_prv -P-> s_pub,
+    distinct/name D(s_prv)/Def | error "Duplicate definitions" @NAMES,
+    distinct/name D(s_prv)/Mod | error "Duplicate modules" @NAMES,
+    Map2 [[ es ^ (s_pub, s_prv) ]].
 
-rules // imports
+rules // module
+
+  [[ Mod(Pub(), mn, es) ^ (s_pub, s_prv) ]] :=
+    Mod{mn} <- s_pub,
+    new s_mod_pub,
+    s_mod_pub -P-> s_prv,
+    s_mod_pub -I-> s_prv,
+    new s_mod_prv,
+    s_mod_prv -P-> s_mod_pub,
+    s_mod_prv -I-> s_mod_pub,
+    Mod{mn} =I=> s_mod_pub,
+    Map2 [[ es ^ (s_mod_pub, s_mod_prv) ]].
     
-  [[ Import(mn) ^ (s_mod) ]] :=
-    Mod{mn} -> s_mod,
-    Mod{mn} |-> p,
-    Mod{mn} <=I= s_mod.
+  [[ Mod(Prv(), mn, es) ^ (s_pub, s_prv) ]] :=
+    Mod{mn} <- s_prv,
+    new s_mod_pub,
+    s_mod_pub -P-> s_prv, // For lexical scoping, private parts visible
+    s_mod_pub -I-> s_pub, // For imports, private parts not visible
+    new s_mod_prv,
+    s_mod_prv -P-> s_mod_pub,
+    s_mod_prv -I-> s_mod_pub,
+    Mod{mn} =I=> s_mod_pub,
+    Map2 [[ es ^ (s_mod_pub, s_mod_prv) ]].
 
-rules // definitions
+rules // import
+    
+  [[ WImp(Pub(), id_m) ^ (s_pub, s_prv) ]] :=
+    ImpId [[ id_m ^ (s_pub) : ScopeType(s) ]],
+    s_pub -I-> s.
 
-  [[ Def(dn, e) ^ (s_mod) ]] :=
-    Def{dn} <- s_mod,
+  [[ WImp(Prv(), id_m) ^ (s_pub, s_prv) ]] :=
+    ImpId [[ id_m ^ (s_pub) : ScopeType(s) ]],
+    s_prv -I-> s.
+  
+
+  ImpId [[ Id(id_m) ^ (s) : ScopeType(s_out) ]] :=
+    new s_out,
+    s_out -I-> s,
+    Mod{id_m} -> s_out,
+    Mod{id_m} <=I= s_out,
+    Mod{id_m} |-> m.
+    
+  ImpId [[ QId(id_nest, id_m) ^ (s) : ScopeType(s_out) ]] :=
+    new s_out,
+    ImpId [[ id_nest ^ (s) : ScopeType(s_nest) ]],
+    s_out -I-> s_nest,
+    Mod{id_m} -> s_out,
+    Mod{id_m} <=I= s_out,
+    Mod{id_m} |-> m.
+    
+
+    
+//  ImpId [[ Id(id_m) ^ (s) : s_m_pub ]] :=
+//    Mod{id_m} -> s,
+//    Mod{id_m} |-> m,
+//    m ?=I=> s_m_pub.
+//    
+//  ImpId [[ QId(id_nest, id_m) ^ (s) : s_m_pub ]] :=
+//    ImpId [[ id_nest ^ (s) : s_nest_pub ]],
+//    Mod{id_m} -> s_nest_pub,
+//    Mod{id_m} |-> m,
+//    m ?=I=> s_m_pub.
+
+rules // definition
+
+  [[ Def(Pub(), dn, e) ^ (s_pub, s_prv) ]] :=
+    Def{dn} <- s_pub,
+    [[ e ^ (s_prv) : ty]],
+    Def{dn} : ty !.
+    
+  [[ Def(Prv(), dn, e) ^ (_, s_prv) ]] :=
+    Def{dn} <- s_prv,
+    [[ e ^ (s_prv) : ty]],
+    Def{dn} : ty !.
+    
+  [[ DefT(Pub(), dn, ty, e) ^ (s_pub, s_prv) ]] :=
+    Def{dn} <- s_pub,
     Def{dn} : ty !,
-    [[ e ^ (s_mod) : ty]].
+    [[ e ^ (s_prv) : e_ty]],
+    e_ty == ty | error $[Expected [ty] but found [e_ty]] @ e.
+    
+  [[ DefT(Prv(), dn, ty, e) ^ (_, s_prv) ]] :=
+    Def{dn} <- s_prv,
+    Def{dn} : ty !,
+    [[ e ^ (s_prv) : e_ty]],
+    e_ty == ty | error $[Expected [ty] but found [e_ty]] @ e.
 
-  [[ Ref(dn) ^ (s_mod) : ty ]] :=
-    Def{dn} -> s_mod,
+rules // expression
+
+  [[ Ref(dn) ^ (s) : ty ]] :=
+    Def{dn} -> s,
     Def{dn} |-> d,
-    d : ty. 
+    d : ty.
 
-rules // literals
+  [[ Add(l, r) ^ (s) : IntTy() ]] :=
+    [[ l ^ (s) : l_ty]],
+    l_ty == IntTy() | error $[Expected integer] @ l,
+    [[ r ^ (s) : r_ty]],
+    r_ty == IntTy() | error $[Expected integer] @ r.
+
+  [[ Or(l, r) ^ (s) : BoolTy() ]] :=
+    [[ l ^ (s) : l_ty]],
+    l_ty == BoolTy() | error $[Expected boolean] @ l,
+    [[ r ^ (s) : r_ty]],
+    r_ty == BoolTy() | error $[Expected boolean] @ r.
 
   [[ Int(_)  ^ (_) : IntTy()  ]] := true.
   [[ True()  ^ (_) : BoolTy() ]] := true.
   [[ False() ^ (_) : BoolTy() ]] := true.
-
-rules // operators
-
-  [[ Add(l, r) ^ (s_mod) : IntTy() ]] :=
-    [[ l ^ (s_mod) : ty1]],
-    [[ r ^ (s_mod) : ty2]],
-    ty1 == IntTy() | error $[Expected integer],
-    ty2 == IntTy() | error $[Expected integer].
-
-  [[ Or(l, r) ^ (s_mod) : BoolTy() ]] :=
-    [[ l ^ (s_mod) : ty1]],
-    [[ r ^ (s_mod) : ty2]],
-    ty1 == BoolTy() | error $[Expected boolean],
-    ty2 == BoolTy() | error $[Expected boolean].

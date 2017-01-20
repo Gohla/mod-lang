@@ -4,16 +4,22 @@ imports lex
 
 context-free syntax
   
-Start.Program = <module <ID>
+Start.Program = <<{Elem "\n"}*>>
 
-<{Import "\n"}*>
-
-<{Def "\n"}*>
+Elem.Mod  = <<Visibility> mod <ID> {
+  <{Elem "\n"}*>
+}
 >
+Elem.Imp  = <<Visibility> imp <MId>.<ID>>
+Elem.WImp = <<Visibility> imp <MId>.*>
+Elem.Def  = <<Visibility> def <ID> = <Exp>>
+Elem.DefT = <<Visibility> def <ID> : <Type> = <Exp>>
 
-Import.Import = <import <ID>.*>
+MId.Id = <<ID>>
+MId.QId = <<MId>.<ID>>
 
-Def.Def = <def <ID> = <Exp>>
+Visibility.Pub = <pub>
+Visibility.Prv = <prv>
 
 Exp.True  = <true>
 Exp.False = <false>
@@ -21,6 +27,10 @@ Exp.Int   = <<INT>>
 Exp.Add   = <<Exp> + <Exp>> {left}
 Exp.Or    = <<Exp> | <Exp>> {left}
 Exp.Ref   = <<ID>> {avoid}
+Exp.QRef  = <<MId>.<ID>> {avoid}
+
+Type.IntTy  = <int>
+Type.BoolTy = <bool>
 
 context-free priorities
 
@@ -32,4 +42,4 @@ Start
 
 template options
 
-keyword  -/- [a-zA-Z]
+keyword -/- [a-zA-Z]
