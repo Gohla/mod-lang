@@ -1,0 +1,35 @@
+module todo
+
+language mod
+
+test qualified resolution should fail, but is ambiguous [[
+  prv imp m.[[n]].*
+  pub mod m {}
+  pub mod [[n]] {}
+]]
+2 errors
+not resolve #1 to #2
+
+test resolution should succeed, but is ambiguous [[
+  prv imp m.*
+  pub mod m {
+    pub imp [[n]].*
+  }
+  pub mod [[n]] {}
+]]
+0 errors
+resolve #1 to #2
+
+test untyped self reference should be disallowed [[
+  pub def d = [[d]]
+]]
+1 error at #1
+0 warnings
+
+test untyped cyclic reference should be disallowed [[
+  pub def d = [[e]]
+  pub def e = [[d]]
+]]
+1 error at #1
+1 error at #2
+0 warnings

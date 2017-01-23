@@ -1,0 +1,130 @@
+module types
+
+language mod
+
+//
+// Literals
+//
+
+test integer type [[
+  pub def d = [[1]] + [[-1]]
+]]
+0 errors
+0 warnings
+run get-type on #1 to IntTy()
+run get-type on #2 to IntTy()
+
+test boolean type [[
+  pub def d = [[true]] | [[false]]
+]]
+0 errors
+0 warnings
+run get-type on #1 to BoolTy()
+run get-type on #2 to BoolTy()
+
+
+
+//
+// References
+//
+
+test integer reference type [[
+  pub def d = 1
+  pub def e = [[d]]
+]]
+0 errors
+0 warnings
+run get-type on #1 to IntTy()
+
+test boolean reference type [[
+  pub def d = true
+  pub def e = [[d]]
+]]
+0 errors
+0 warnings
+run get-type on #1 to BoolTy()
+
+
+
+//
+// Operators
+//
+
+test add type [[
+  pub def d = [[1 + 2 + 3]]
+]]
+0 errors
+0 warnings
+run get-type on #1 to IntTy()
+
+test add unexpected left [[
+  pub def d = [[true]] + 2
+]]
+1 error at #1
+0 warnings
+
+test add unexpected right [[
+  pub def d = 1 + [[false]]
+]]
+1 error at #1
+0 warnings
+
+test or type [[
+  pub def d = [[true | false | true]]
+]]
+0 errors
+0 warnings
+run get-type on #1 to BoolTy()
+
+test or unexpected left [[
+  pub def d = [[1]] | true
+]]
+1 error at #1
+0 warnings
+
+test or unexpected right [[
+  pub def d = false | [[2]]
+]]
+1 error at #1
+0 warnings
+
+
+
+//
+// Typed definitions
+//
+
+test expect integer [[
+  pub def d : int = 1
+]]
+0 errors
+0 warnings
+
+test unexpected integer [[
+  pub def d : bool = [[1]]
+]]
+1 error at #1
+0 warnings
+
+test expect boolean [[
+  pub def d : bool = true
+]]
+0 errors
+0 warnings
+
+test unexpected boolean [[
+  pub def d : int = [[true]]
+]]
+1 error at #1
+0 warnings
+
+test expect integer across modules [[
+  pub def d : int = [[m.n.e]]
+  pub mod m {
+    pub mod n {
+      pub def e = true
+    }  
+  }
+]]
+1 error at #1
+0 warnings

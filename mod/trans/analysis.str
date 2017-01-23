@@ -4,6 +4,7 @@ imports
   
   nabl2shared
   nabl2runtime
+  nabl2/api
   
   static-semantics
 
@@ -22,3 +23,9 @@ rules // Debugging
   debug-show-analyzed: (selected, _, _, path, project-path) -> (filename, result)
     with filename := <guarantee-extension(|"analyzed.aterm")> path
        ; result   := selected
+
+  get-type:
+    term -> ty
+    with
+      a := <nabl2-get-ast-type> term
+    ; ty := <nabl2-get-type(|a) <+ nabl2-get-ast-type> term

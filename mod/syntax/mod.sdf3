@@ -10,8 +10,7 @@ Elem.Mod  = <<Visibility> mod <ID> {
   <{Elem "\n"}*>
 }
 >
-Elem.Imp  = <<Visibility> imp <MId>.<ID>>
-Elem.WImp = <<Visibility> imp <MId>.*>
+Elem.Imp = <<Visibility> imp <MId>.*>
 Elem.Def  = <<Visibility> def <ID> = <Exp>>
 Elem.DefT = <<Visibility> def <ID> : <Type> = <Exp>>
 
