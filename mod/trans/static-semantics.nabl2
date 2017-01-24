@@ -22,8 +22,8 @@ rules // init
 
   init ^ (s_root) :=
     new s_root,
-    distinct/name D(s_prog)/Def | error "Duplicate definitions" @NAMES,
-    distinct/name D(s_prog)/Mod | error "Duplicate modules" @NAMES.
+    distinct/name D(s_root)/Def | error "Duplicate definitions" @NAMES,
+    distinct/name D(s_root)/Mod | error "Duplicate modules" @NAMES.
         
 rules // program
 
@@ -42,10 +42,14 @@ rules // module
     new s_mod_pub,
     s_mod_pub -P-> s_prv,
     s_mod_pub -I-> s_prv,
+    distinct/name D(s_mod_pub)/Def | error "Duplicate definitions" @NAMES,
+    distinct/name D(s_mod_pub)/Mod | error "Duplicate modules" @NAMES,
     new s_mod_prv,
     s_mod_prv -P-> s_mod_pub,
     s_mod_prv -I-> s_mod_pub,
     Mod{id_m} =I=> s_mod_pub,
+    distinct/name D(s_mod_prv)/Def | error "Duplicate definitions" @NAMES,
+    distinct/name D(s_mod_prv)/Mod | error "Duplicate modules" @NAMES,
     Map2 [[ es ^ (s_mod_pub, s_mod_prv) ]].
     
   [[ Mod(Prv(), id_m, es) ^ (s_pub, s_prv) ]] :=
@@ -53,10 +57,14 @@ rules // module
     new s_mod_pub,
     s_mod_pub -P-> s_prv, // For lexical scoping, private parts visible
     s_mod_pub -I-> s_pub, // For imports, private parts not visible
+    distinct/name D(s_mod_pub)/Def | error "Duplicate definitions" @NAMES,
+    distinct/name D(s_mod_pub)/Mod | error "Duplicate modules" @NAMES,
     new s_mod_prv,
     s_mod_prv -P-> s_mod_pub,
     s_mod_prv -I-> s_mod_pub,
     //Mod{id_m} =I=> s_mod_pub, // TODO: is an assoc scope needed for private module?
+    distinct/name D(s_mod_prv)/Def | error "Duplicate definitions" @NAMES,
+    distinct/name D(s_mod_prv)/Mod | error "Duplicate modules" @NAMES,
     Map2 [[ es ^ (s_mod_pub, s_mod_prv) ]].
 
 rules // import

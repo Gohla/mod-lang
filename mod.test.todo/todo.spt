@@ -33,3 +33,15 @@ test untyped cyclic reference should be disallowed [[
 1 error at #1
 1 error at #2
 0 warnings
+
+test duplicate modules between public and private spaces should be disallowed [[
+  pub mod m {}
+  prv mod m {}
+]]
+2 errors
+
+test duplicate definitions between public and private spaces should be disallowed [[
+  pub def d = 1
+  prv def d = 1
+]]
+2 errors
