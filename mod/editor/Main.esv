@@ -14,7 +14,86 @@ language
 menus
 
   menu: "Generation"
+  
+    submenu: "Import chain" (source)
+      submenu: "Module scoped"
+        submenu: "Private imports"
+          submenu: "Typed definitions"
+            action: "10 files" = gen-prv-imp-chain-typed-10-action
+            action: "100 files" = gen-prv-imp-chain-typed-100-action
+            action: "1000 files" = gen-prv-imp-chain-typed-1000-action
+          end
+          submenu: "Untyped definitions"
+            action: "10 files" = gen-prv-imp-chain-untyped-10-action
+            action: "100 files" = gen-prv-imp-chain-untyped-100-action
+            action: "1000 files" = gen-prv-imp-chain-untyped-1000-action
+          end
+        end
+        submenu: "Public imports"
+          submenu: "Typed definitions"
+            action: "10 files" = gen-pub-imp-chain-typed-10-action
+            action: "100 files" = gen-pub-imp-chain-typed-100-action
+            action: "1000 files" = gen-pub-imp-chain-typed-1000-action
+          end
+          submenu: "Untyped definitions"
+            action: "10 files" = gen-pub-imp-chain-untyped-10-action
+            action: "100 files" = gen-pub-imp-chain-untyped-100-action
+            action: "1000 files" = gen-pub-imp-chain-untyped-1000-action
+          end
+        end
+      end
+      submenu: "Unscoped"
+        submenu: "Private imports"
+          submenu: "Typed definitions"
+            action: "10 files" = gen-root-prv-imp-chain-typed-10-action
+            action: "100 files" = gen-root-prv-imp-chain-typed-100-action
+            action: "1000 files" = gen-root-prv-imp-chain-typed-1000-action
+          end
+          submenu: "Untyped definitions"
+            action: "10 files" = gen-root-prv-imp-chain-untyped-10-action
+            action: "100 files" = gen-root-prv-imp-chain-untyped-100-action
+            action: "1000 files" = gen-root-prv-imp-chain-untyped-1000-action
+          end
+        end
+        submenu: "Public imports"
+          submenu: "Typed definitions"
+            action: "10 files" = gen-root-pub-imp-chain-typed-10-action
+            action: "100 files" = gen-root-pub-imp-chain-typed-100-action
+            action: "1000 files" = gen-root-pub-imp-chain-typed-1000-action
+          end
+          submenu: "Untyped definitions"
+            action: "10 files" = gen-root-pub-imp-chain-untyped-10-action
+            action: "100 files" = gen-root-pub-imp-chain-untyped-100-action
+            action: "1000 files" = gen-root-pub-imp-chain-untyped-1000-action
+          end
+        end
+      end
+    end
     
-    action: "Chain of 10"   = gen-import-chain-10-action (source)
-    action: "Chain of 100"  = gen-import-chain-100-action (source)
-    action: "Chain of 1000" = gen-import-chain-1000-action (source)
+    submenu: "Qualified reference chain" (source)
+      submenu: "Module scoped"
+        submenu: "Typed definitions"
+          action: "10 files" = gen-ref-chain-typed-10-action
+          action: "100 files" = gen-ref-chain-typed-100-action
+          action: "1000 files" = gen-ref-chain-typed-1000-action
+        end
+        submenu: "Untyped definitions"
+          action: "10 files" = gen-ref-chain-untyped-10-action
+          action: "100 files" = gen-ref-chain-untyped-100-action
+          action: "1000 files" = gen-ref-chain-untyped-1000-action
+        end
+      end
+      submenu: "Unscoped"
+        submenu: "Typed definitions"
+          action: "10 files" = gen-root-ref-chain-typed-10-action
+          action: "100 files" = gen-root-ref-chain-typed-100-action
+          action: "1000 files" = gen-root-ref-chain-typed-1000-action
+        end
+        submenu: "Untyped definitions"
+          action: "10 files" = gen-root-ref-chain-untyped-10-action
+          action: "100 files" = gen-root-ref-chain-untyped-100-action
+          action: "1000 files" = gen-root-ref-chain-untyped-1000-action
+        end
+      end
+    end
+

@@ -2,26 +2,86 @@ module gen/action
 
 imports
 
+  pp
   gen/chain
 
 rules
 
-  gen-import-chain-action(|size):
-    (_, _, _, path, project-path) -> None()
-    with
-      files := <gen-import-chain> size
-    ; <map(write-string-to-file(|project-path))> files
+  gen-pub-imp-chain-untyped-10-action   = _gen-imp-chain-action(fail, fail, fail|10)
+  gen-pub-imp-chain-untyped-100-action  = _gen-imp-chain-action(fail, fail, fail|100)
+  gen-pub-imp-chain-untyped-1000-action = _gen-imp-chain-action(fail, fail, fail|1000)
 
-  gen-import-chain-10-action   = gen-import-chain-action(|10)
-  gen-import-chain-100-action  = gen-import-chain-action(|100)
-  gen-import-chain-1000-action = gen-import-chain-action(|1000)
+  gen-pub-imp-chain-typed-10-action   = _gen-imp-chain-action(fail, fail, id|10)
+  gen-pub-imp-chain-typed-100-action  = _gen-imp-chain-action(fail, fail, id|100)
+  gen-pub-imp-chain-typed-1000-action = _gen-imp-chain-action(fail, fail, id|1000)
+
+  gen-prv-imp-chain-untyped-10-action   = _gen-imp-chain-action(fail, id, fail|10)
+  gen-prv-imp-chain-untyped-100-action  = _gen-imp-chain-action(fail, id, fail|100)
+  gen-prv-imp-chain-untyped-1000-action = _gen-imp-chain-action(fail, id, fail|1000)
+
+  gen-prv-imp-chain-typed-10-action   = _gen-imp-chain-action(fail, id, id|10)
+  gen-prv-imp-chain-typed-100-action  = _gen-imp-chain-action(fail, id, id|100)
+  gen-prv-imp-chain-typed-1000-action = _gen-imp-chain-action(fail, id, id|1000)
+  
+  
+  gen-root-pub-imp-chain-untyped-10-action   = _gen-imp-chain-action(id, fail, fail|10)
+  gen-root-pub-imp-chain-untyped-100-action  = _gen-imp-chain-action(id, fail, fail|100)
+  gen-root-pub-imp-chain-untyped-1000-action = _gen-imp-chain-action(id, fail, fail|1000)
+
+  gen-root-pub-imp-chain-typed-10-action   = _gen-imp-chain-action(id, fail, id|10)
+  gen-root-pub-imp-chain-typed-100-action  = _gen-imp-chain-action(id, fail, id|100)
+  gen-root-pub-imp-chain-typed-1000-action = _gen-imp-chain-action(id, fail, id|1000)
+
+  gen-root-prv-imp-chain-untyped-10-action   = _gen-imp-chain-action(id, id, fail|10)
+  gen-root-prv-imp-chain-untyped-100-action  = _gen-imp-chain-action(id, id, fail|100)
+  gen-root-prv-imp-chain-untyped-1000-action = _gen-imp-chain-action(id, id, fail|1000)
+
+  gen-root-prv-imp-chain-typed-10-action   = _gen-imp-chain-action(id, id, id|10)
+  gen-root-prv-imp-chain-typed-100-action  = _gen-imp-chain-action(id, id, id|100)
+  gen-root-prv-imp-chain-typed-1000-action = _gen-imp-chain-action(id, id, id|1000)
+
+
+  gen-ref-chain-untyped-10-action   = _gen-ref-chain-action(fail, fail|10)
+  gen-ref-chain-untyped-100-action  = _gen-ref-chain-action(fail, fail|100)
+  gen-ref-chain-untyped-1000-action = _gen-ref-chain-action(fail, fail|1000)
+
+  gen-ref-chain-typed-10-action   = _gen-ref-chain-action(fail, id|10)
+  gen-ref-chain-typed-100-action  = _gen-ref-chain-action(fail, id|100)
+  gen-ref-chain-typed-1000-action = _gen-ref-chain-action(fail, id|1000)
+  
+  
+  gen-root-ref-chain-untyped-10-action   = _gen-ref-chain-action(id, fail|10)
+  gen-root-ref-chain-untyped-100-action  = _gen-ref-chain-action(id, fail|100)
+  gen-root-ref-chain-untyped-1000-action = _gen-ref-chain-action(id, fail|1000)
+
+  gen-root-ref-chain-typed-10-action   = _gen-ref-chain-action(id, id|10)
+  gen-root-ref-chain-typed-100-action  = _gen-ref-chain-action(id, id|100)
+  gen-root-ref-chain-typed-1000-action = _gen-ref-chain-action(id, id|1000)
 
 rules
-       
-  write-string-to-file(|project-path):
-    (filename, string) -> None()
+
+  _gen-imp-chain-action(root-scoped, prv-imp, typed-def|size) = 
+    _gen-imp-ref-chain-action(root-scoped, id, prv-imp, typed-def|size)
+  
+  _gen-ref-chain-action(root-scoped, typed-def|size) = 
+    _gen-imp-ref-chain-action(root-scoped, fail, fail, typed-def|size)
+
+  _gen-imp-ref-chain-action(root-scoped, imp, prv-imp, typed-def|size):
+    (_, _, _, _, project-path) -> None()
     with
-      fullname := $[[project-path]/[filename]]
+      files := <gen-imp-ref-chain(root-scoped, imp, prv-imp, typed-def|size)> size
+    ; <map(_pretty-print; _write-to-file(|project-path))> files
+
+rules
+  
+  _pretty-print:
+    (fn, ast) -> (fn, str)
+    with str := <pp-mod-string> ast
+  
+  _write-to-file(|path):
+    (fn, str) -> None()
+    with
+      fullname := $[[path]/[fn]]
     ; handle := <fopen> (fullname, "w")
-    ; <fputs> (string, handle)
+    ; <fputs> (str, handle)
     ; <fclose> handle

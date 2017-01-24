@@ -2,31 +2,52 @@ module gen/chain
 
 imports
 
-rules // Generate long import chain
+  signatures/mod-sig
 
-  gen-import-chain:
-    size -> <range(|1); map(gen-import-chain-part)> size
+rules // Generate long import/reference chain
 
-  gen-import-chain-part:
-    0 -> (filename, string)
+  gen-imp-ref-chain(root-scoped, imp, prv-imp, typed-def|size):
+    _ -> <range(|1); map(_gen-imp-ref-chain-part(root-scoped, imp, prv-imp, typed-def))> size
+
+rules
+
+  _gen-imp-ref-chain-part(root-scoped, imp, prv-imp, typed-def):
+    0 -> ("m0.mod", ast)
     with
-      filename := $[m0.mod]
-    ; string   := 
-      $[module m0
-        
-        def d0 = 0
-      ]
-      
-  gen-import-chain-part:
-    i -> (filename, string)
+      ast := <_gen_program(root-scoped|[Def(Pub(), "d0", Int("0"))])> 0
+    
+  _gen-imp-ref-chain-part(root-scoped, imp, prv-imp, typed-def):
+    i -> ($[m[i].mod], ast)
     where <gt> (i, 0)
     with
-      filename := $[m[i].mod]
-    ; prev_i   := <dec> i
-    ; string   := 
-      $[module m[i]
-        
-        import m[prev_i].*
-        
-        def d[i] = d[prev_i]
-      ]
+      uses := <_gen-uses(root-scoped, imp, prv-imp, typed-def)> i
+    ; ast  := <_gen_program(root-scoped|uses)> i
+
+rules
+
+  _gen_program(root-scoped|uses): i -> Program(uses                       ) where root-scoped
+  _gen_program(root-scoped|uses): i -> Program([Mod(Pub(), $[m[i]], uses)]) where not(root-scoped)
+
+  _gen-uses(root-scoped, imp, prv-imp, typed-def):
+    i -> [imp, d]
+    where imp
+    with
+      imp := Imp(<_gen-imp-acc(prv-imp)>, Id($[m[<dec> i]]))
+    ; ref := <_gen-ref> i
+    ; d   := <_gen-def(typed-def|ref)> i
+
+  _gen-uses(root-scoped, imp, prv-imp, typed-def):
+    i -> [d]
+    where not(imp)
+    with
+      ref := <root-scoped; _gen-ref <+ _gen-qref> i
+    ; d   := <_gen-def(typed-def|ref)> i
+
+  _gen-imp-acc(prv-imp): i -> Prv() where prv-imp
+  _gen-imp-acc(prv-imp): i -> Pub() where not(prv-imp)
+
+  _gen-def(typed-def|ref): i -> DefT(Pub(), $[d[i]], IntTy(), ref) where typed-def
+  _gen-def(typed-def|ref): i -> Def(Pub() , $[d[i]]         , ref) where not(typed-def)
+
+  _gen-ref:  i -> Ref(                   $[d[prev_i]]) with prev_i := <dec> i
+  _gen-qref: i -> QRef(Id($[m[prev_i]]), $[d[prev_i]]) with prev_i := <dec> i
