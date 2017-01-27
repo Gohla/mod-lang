@@ -14,10 +14,6 @@ signature
     order           D < I, D < P, I < P
     well-formedness P*.I*
 
-  types
-  
-    ScopeType(scope)
-
 rules // init
 
   init ^ (s_root) :=
@@ -30,117 +26,107 @@ rules // program
   [[ Program(es) ^ (s_pub) ]] :=
     new s_prv,
     s_prv -P-> s_pub,
-    s_prv -I-> s_pub,
     distinct/name D(s_prv)/Def | error "Duplicate definitions" @NAMES,
     distinct/name D(s_prv)/Mod | error "Duplicate modules" @NAMES,
     Map2 [[ es ^ (s_pub, s_prv) ]].
 
 rules // module
 
-  [[ Mod(Pub(), id_m, es) ^ (s_pub, s_prv) ]] :=
-    Mod{id_m} <- s_pub,
+  [[ Mod(Pub(), id_mod, es) ^ (s_pub, s_prv) ]] :=
+    Mod{id_mod} <- s_pub,
     new s_mod_pub,
     s_mod_pub -P-> s_prv,
-    s_mod_pub -I-> s_prv,
     distinct/name D(s_mod_pub)/Def | error "Duplicate definitions" @NAMES,
     distinct/name D(s_mod_pub)/Mod | error "Duplicate modules" @NAMES,
     new s_mod_prv,
     s_mod_prv -P-> s_mod_pub,
-    s_mod_prv -I-> s_mod_pub,
-    Mod{id_m} =I=> s_mod_pub,
+    Mod{id_mod} =I=> s_mod_pub,
     distinct/name D(s_mod_prv)/Def | error "Duplicate definitions" @NAMES,
     distinct/name D(s_mod_prv)/Mod | error "Duplicate modules" @NAMES,
     Map2 [[ es ^ (s_mod_pub, s_mod_prv) ]].
     
-  [[ Mod(Prv(), id_m, es) ^ (s_pub, s_prv) ]] :=
-    Mod{id_m} <- s_prv,
+  [[ Mod(Prv(), id_mod, es) ^ (s_pub, s_prv) ]] :=
+    Mod{id_mod} <- s_prv,
     new s_mod_pub,
-    s_mod_pub -P-> s_prv, // For lexical scoping, private parts visible
-    s_mod_pub -I-> s_pub, // For imports, private parts not visible
+    s_mod_pub -P-> s_prv,
     distinct/name D(s_mod_pub)/Def | error "Duplicate definitions" @NAMES,
     distinct/name D(s_mod_pub)/Mod | error "Duplicate modules" @NAMES,
     new s_mod_prv,
     s_mod_prv -P-> s_mod_pub,
-    s_mod_prv -I-> s_mod_pub,
-    //Mod{id_m} =I=> s_mod_pub, // TODO: is an assoc scope needed for private module?
     distinct/name D(s_mod_prv)/Def | error "Duplicate definitions" @NAMES,
     distinct/name D(s_mod_prv)/Mod | error "Duplicate modules" @NAMES,
     Map2 [[ es ^ (s_mod_pub, s_mod_prv) ]].
 
 rules // import
     
-  [[ Imp(Pub(), id_m) ^ (s_pub, s_prv) ]] :=
-    ImpId [[ id_m ^ (s_pub) : ScopeType(s_out) ]],
-    s_pub -I-> s_out.
+  [[ Imp(Pub(), id_mod) ^ (s_pub, s_prv) ]] :=
+    ImpId [[ id_mod ^ (s_pub, s_pub) ]].
 
-  [[ Imp(Prv(), id_m) ^ (s_pub, s_prv) ]] :=
-    ImpId [[ id_m ^ (s_pub) : ScopeType(s_out) ]],
-    s_prv -I-> s_out.
+  [[ Imp(Prv(), id_mod) ^ (s_pub, s_prv) ]] :=
+    ImpId [[ id_mod ^ (s_pub, s_prv) ]].
   
 
-  ImpId [[ Id(id_m) ^ (s) : ScopeType(s_out) ]] :=
-    new s_out,
-    s_out -I-> s,
-    Mod{id_m} -> s_out,
-    Mod{id_m} <=I= s_out,
-    Mod{id_m} |-> m.
-    
-  ImpId [[ QId(id_nest, id_m) ^ (s) : ScopeType(s_out) ]] :=
-    new s_out,
-    ImpId [[ id_nest ^ (s) : ScopeType(s_nest) ]],
-    s_out -I-> s_nest,
-    Mod{id_m} -> s_out,
-    Mod{id_m} <=I= s_out,
-    Mod{id_m} |-> m.
+  ImpId [[ Id(id_mod) ^ (s_mod, s_out) ]] :=
+    Mod{id_mod} -> s_mod,
+    Mod{id_mod} <=I= s_out,
+    Mod{id_mod} |-> m.
+
+  ImpId [[ QId(id_sub, id_mod) ^ (s_mod, s_out) ]] :=
+    new s_imp,
+    ImpId [[ id_sub ^ (s_mod, s_imp) ]],
+    Mod{id_mod} -> s_imp,
+    Mod{id_mod} <=I= s_out,
+    Mod{id_mod} |-> m.
 
 rules // definition
 
-  [[ Def(Pub(), id_d, e) ^ (s_pub, s_prv) ]] :=
-    Def{id_d} <- s_pub,
+  [[ Def(Pub(), id_def, e) ^ (s_pub, s_prv) ]] :=
+    Def{id_def} <- s_pub,
     [[ e ^ (s_prv, s_pub) : ty]],
-    Def{id_d} : ty !.
+    Def{id_def} : ty !.
     
-  [[ Def(Prv(), id_d, e) ^ (_, s_prv) ]] :=
-    Def{id_d} <- s_prv,
+  [[ Def(Prv(), id_def, e) ^ (_, s_prv) ]] :=
+    Def{id_def} <- s_prv,
     [[ e ^ (s_prv, s_pub) : ty]],
-    Def{id_d} : ty !.
+    Def{id_def} : ty !.
     
-  [[ DefT(Pub(), id_d, ty_d, e) ^ (s_pub, s_prv) ]] :=
-    Def{id_d} <- s_pub,
-    Def{id_d} : ty_d !,
+  [[ DefT(Pub(), id_def, ty_d, e) ^ (s_pub, s_prv) ]] :=
+    Def{id_def} <- s_pub,
+    Def{id_def} : ty_d !,
     [[ e ^ (s_prv, s_pub) : ty_e]],
     ty_e == ty_d | error $[Expected [ty_d] but found [ty_e]] @ e.
     
-  [[ DefT(Prv(), id_d, ty_d, e) ^ (_, s_prv) ]] :=
-    Def{id_d} <- s_prv,
-    Def{id_d} : ty_d !,
+  [[ DefT(Prv(), id_def, ty_d, e) ^ (_, s_prv) ]] :=
+    Def{id_def} <- s_prv,
+    Def{id_def} : ty_d !,
     [[ e ^ (s_prv, s_pub) : ty_e]],
     ty_e == ty_d | error $[Expected [ty_d] but found [ty_e]] @ e.
 
 rules // expression
 
-  [[ Ref(id_d) ^ (s_d, _) : ty ]] :=
-    Def{id_d} -> s_d,
-    Def{id_d} |-> d,
+  [[ Ref(id_def) ^ (s_def, _) : ty ]] :=
+    Def{id_def} -> s_def,
+    Def{id_def} |-> d,
     d : ty.
 
-  [[ QRef(id_m, id_d) ^ (_, s_m) : ty ]] :=
-    ImpId [[ id_m ^ (s_m) : ScopeType(s_out) ]],
-    Def{id_d} -> s_out,
-    Def{id_d} |-> d,
+  [[ QRef(id_mod, id_def) ^ (_, s_mod) : ty ]] :=
+    new s_imp,
+    ImpId [[ id_mod ^ (s_mod, s_imp) ]],
+    Def{id_def} -> s_imp,
+    Def{id_def} |-> d,
     d : ty.
-    
 
-  [[ Add(l, r) ^ (s_d, s_m) : IntTy() ]] :=
-    [[ l ^ (s_d, s_m) : ty_l]],
+
+  [[ Add(l, r) ^ (s_def, s_mod) : IntTy() ]] :=
+    [[ l ^ (s_def, s_mod) : ty_l]],
     ty_l == IntTy() | error $[Expected integer] @ l,
-    [[ r ^ (s_d, s_m) : ty_r]],
+    [[ r ^ (s_def, s_mod) : ty_r]],
     ty_r == IntTy() | error $[Expected integer] @ r.
 
-  [[ Or(l, r) ^ (s_d, s_m) : BoolTy() ]] :=
-    [[ l ^ (s_d, s_m) : ty_l]],
+  [[ Or(l, r) ^ (s_def, s_mod) : BoolTy() ]] :=
+    [[ l ^ (s_def, s_mod) : ty_l]],
     ty_l == BoolTy() | error $[Expected boolean] @ l,
-    [[ r ^ (s_d, s_m) : ty_r]],
+    [[ r ^ (s_def, s_mod) : ty_r]],
     ty_r == BoolTy() | error $[Expected boolean] @ r.
 
 
