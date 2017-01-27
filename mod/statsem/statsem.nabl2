@@ -85,7 +85,7 @@ rules // definition
     [[ e ^ (s_prv, s_pub) : ty]],
     Def{id_def} : ty !.
     
-  [[ Def(Prv(), id_def, e) ^ (_, s_prv) ]] :=
+  [[ Def(Prv(), id_def, e) ^ (s_pub, s_prv) ]] :=
     Def{id_def} <- s_prv,
     [[ e ^ (s_prv, s_pub) : ty]],
     Def{id_def} : ty !.
@@ -96,7 +96,7 @@ rules // definition
     [[ e ^ (s_prv, s_pub) : ty_e]],
     ty_e == ty_d | error $[Expected [ty_d] but found [ty_e]] @ e.
     
-  [[ DefT(Prv(), id_def, ty_d, e) ^ (_, s_prv) ]] :=
+  [[ DefT(Prv(), id_def, ty_d, e) ^ (s_pub, s_prv) ]] :=
     Def{id_def} <- s_prv,
     Def{id_def} : ty_d !,
     [[ e ^ (s_prv, s_pub) : ty_e]],
